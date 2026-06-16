@@ -4,6 +4,8 @@ Principle: **deploy on hour 1**, not the last day. Prove the Azure pipeline befo
 
 Azure (already provisioned): RG `INTP-MidTerm-Project`, account `Study-With-Obsidian`, project `StudyApp-With-Obsidian`, model `gpt-4.1-mini`, region `eastus`. Chat playground verified working.
 
+**Live app (#1 deployed):** https://studywithobsidian-cfavd0bsfdhnhjb4.canadacentral-01.azurewebsites.net — App Service `studywithobsidian` (Canada Central, B1), GitHub Actions CD on push to `master`.
+
 | Window | Task | Done when |
 |---|---|---|
 | **H0–1** | ✅ Azure OpenAI / Foundry provisioned + `gpt-4.1-mini` deployment verified. Provision Azure SQL (serverless free) + create `StudyNotes` table. Create App Service plan (F1/B1). | OpenAI reachable, SQL table exists, App Service ready |
