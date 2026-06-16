@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { MAX_MATERIAL_CHARS, type StudyNote } from "@/lib/studyNote";
+import { obsidianFileName, toObsidianMarkdown } from "@/lib/obsidian";
 
 export default function Home() {
   const [material, setMaterial] = useState("");
@@ -102,13 +103,36 @@ export default function Home() {
 }
 
 function StudyNoteView({ note }: { note: StudyNote }) {
+  function handleExport() {
+    const blob = new Blob([toObsidianMarkdown(note)], {
+      type: "text/markdown;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = obsidianFileName(note.title);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <article className="flex flex-col gap-5 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-      <div className="flex flex-col gap-1">
-        <span className="text-xs font-medium uppercase tracking-wide text-zinc-400">
-          AI-generated · {note.course}
-        </span>
-        <h2 className="text-2xl font-semibold">{note.title}</h2>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <span className="text-xs font-medium uppercase tracking-wide text-zinc-400">
+            AI-generated · {note.course}
+          </span>
+          <h2 className="text-2xl font-semibold">{note.title}</h2>
+        </div>
+        <button
+          type="button"
+          onClick={handleExport}
+          className="shrink-0 self-start rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+        >
+          Export to Obsidian
+        </button>
       </div>
 
       <section className="flex flex-col gap-1">
