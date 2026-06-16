@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { MAX_MATERIAL_CHARS, type StudyNote } from "@/lib/studyNote";
+
+const ACCEPTED_FILE_TYPES = ".md,.markdown,.txt,text/markdown,text/plain";
 
 export default function Home() {
   const [material, setMaterial] = useState("");
@@ -9,11 +11,38 @@ export default function Home() {
   const [note, setNote] = useState<StudyNote | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const trimmedLength = material.trim().length;
   const tooLong = material.length > MAX_MATERIAL_CHARS;
+  const isEmpty = trimmedLength === 0;
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    // Reset the input so re-selecting the same file fires onChange again.
+    e.target.value = "";
+    if (!file) return;
+    setError(null);
+    try {
+      const text = await file.text();
+      setMaterial(text);
+    } catch {
+      setError(`Could not read "${file.name}". Try copying the text in instead.`);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (isEmpty) {
+      setError("Add some study material before generating a note.");
+      return;
+    }
+    if (tooLong) {
+      setError(
+        `Study Material is too long. Trim it to ${MAX_MATERIAL_CHARS.toLocaleString()} characters or fewer.`,
+      );
+      return;
+    }
     setLoading(true);
     setError(null);
     setNote(null);
@@ -74,15 +103,37 @@ export default function Home() {
             <textarea
               value={material}
               onChange={(e) => setMaterial(e.target.value)}
-              placeholder="Paste your raw course notes here…"
+              placeholder="Paste your raw course notes here, or load a .md / .txt file…"
               rows={12}
               className="resize-y rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900"
             />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={ACCEPTED_FILE_TYPES}
+              onChange={handleFile}
+              className="hidden"
+            />
+            <div className="flex items-center gap-3 text-xs">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="rounded-md border border-zinc-300 px-2.5 py-1 font-medium transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+              >
+                Load .md / .txt file
+              </button>
+              {tooLong && (
+                <span className="text-red-600 dark:text-red-400">
+                  Over the {MAX_MATERIAL_CHARS.toLocaleString()}-character limit
+                  — trim it before generating.
+                </span>
+              )}
+            </div>
           </label>
 
           <button
             type="submit"
-            disabled={!material.trim() || tooLong || loading}
+            disabled={isEmpty || tooLong || loading}
             className="self-start rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-300"
           >
             {loading ? "Generating…" : "Generate Study Note"}
