@@ -13,6 +13,20 @@ export type StudyNote = {
   questions: string[];
 };
 
+// A Study Note as persisted in Azure SQL (the source of truth — see ADR 0001).
+export type SavedStudyNote = StudyNote & {
+  id: string;
+  createdAt: string; // ISO 8601
+};
+
+// Lightweight row for the history list (no summary/material payload).
+export type StudyNoteSummary = {
+  id: string;
+  title: string;
+  course: string;
+  createdAt: string; // ISO 8601
+};
+
 // JSON schema enforced via the model's structured-output mode (strict).
 export const studyNoteJsonSchema = {
   name: "study_note",

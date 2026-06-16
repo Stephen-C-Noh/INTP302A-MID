@@ -1,7 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { MAX_MATERIAL_CHARS, type StudyNote } from "@/lib/studyNote";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  MAX_MATERIAL_CHARS,
+  type StudyNote,
+  type StudyNoteSummary,
+} from "@/lib/studyNote";
 import { obsidianFileName, toObsidianMarkdown } from "@/lib/obsidian";
 
 const ACCEPTED_FILE_TYPES = ".md,.markdown,.txt,text/markdown,text/plain";
@@ -12,11 +16,39 @@ export default function Home() {
   const [note, setNote] = useState<StudyNote | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [history, setHistory] = useState<StudyNoteSummary[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const trimmedLength = material.trim().length;
   const tooLong = material.length > MAX_MATERIAL_CHARS;
   const isEmpty = trimmedLength === 0;
+
+  const loadHistory = useCallback(async () => {
+    try {
+      const res = await fetch("/api/notes");
+      if (!res.ok) return;
+      setHistory((await res.json()) as StudyNoteSummary[]);
+    } catch {
+      // History is non-critical; fail quietly.
+    }
+  }, []);
+
+  useEffect(() => {
+    loadHistory();
+  }, [loadHistory]);
+
+  async function handleSelect(id: string) {
+    setError(null);
+    try {
+      const res = await fetch(`/api/notes/${id}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to load the note.");
+      setNote(data as StudyNote);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load the note.");
+    }
+  }
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -56,6 +88,7 @@ export default function Home() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Generation failed.");
       setNote(data as StudyNote);
+      loadHistory();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Generation failed.");
     } finally {
@@ -148,8 +181,58 @@ export default function Home() {
         )}
 
         {note && <StudyNoteView note={note} />}
+
+        {history.length > 0 && (
+          <HistoryView history={history} onSelect={handleSelect} />
+        )}
       </main>
     </div>
+  );
+}
+
+function HistoryView({
+  history,
+  onSelect,
+}: {
+  history: StudyNoteSummary[];
+  onSelect: (id: string) => void;
+}) {
+  // Group by course, preserving the (newest-first) order entries arrive in.
+  const byCourse = new Map<string, StudyNoteSummary[]>();
+  for (const item of history) {
+    const key = item.course?.trim() || "Uncategorized";
+    const list = byCourse.get(key) ?? [];
+    list.push(item);
+    byCourse.set(key, list);
+  }
+
+  return (
+    <section className="flex flex-col gap-4 border-t border-zinc-200 pt-6 dark:border-zinc-800">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-400">
+        History
+      </h2>
+      {[...byCourse.entries()].map(([course, items]) => (
+        <div key={course} className="flex flex-col gap-1.5">
+          <h3 className="text-sm font-semibold">{course}</h3>
+          <ul className="flex flex-col gap-1">
+            {items.map((item) => (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  onClick={() => onSelect(item.id)}
+                  className="flex w-full items-baseline justify-between gap-3 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                >
+                  <span className="truncate">{item.title}</span>
+                  <span className="shrink-0 text-xs text-zinc-400">
+                    {new Date(item.createdAt).toLocaleDateString()}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </section>
   );
 }
 
