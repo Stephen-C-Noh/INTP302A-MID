@@ -7,6 +7,7 @@ import {
   SYSTEM_PROMPT,
   type StudyNote,
 } from "@/lib/studyNote";
+import { saveStudyNote } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -80,7 +81,9 @@ export async function POST(req: Request) {
     } catch {
       note = await generate(material, course);
     }
-    return NextResponse.json(note);
+    // Azure SQL is the source of truth — persist before returning (ADR 0001).
+    const saved = await saveStudyNote(note, material);
+    return NextResponse.json(saved);
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Failed to generate Study Note.";
