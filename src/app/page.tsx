@@ -7,9 +7,14 @@ import {
   type StudyNote,
   type StudyNoteSummary,
 } from "@/lib/studyNote";
-import { obsidianFileName, toObsidianMarkdown } from "@/lib/obsidian";
+import {
+  obsidianFileName,
+  obsidianNewUri,
+  toObsidianMarkdown,
+} from "@/lib/obsidian";
 
 const ACCEPTED_FILE_TYPES = ".md,.markdown,.txt,text/markdown,text/plain";
+const VAULT_STORAGE_KEY = "obsidian-vault-name";
 
 export default function Home() {
   const [material, setMaterial] = useState("");
@@ -273,6 +278,19 @@ function HistoryView({
 }
 
 function StudyNoteView({ note }: { note: StudyNote }) {
+  const [vault, setVault] = useState("");
+  const [hint, setHint] = useState<string | null>(null);
+
+  // Remember the vault name across sessions so it's typed once.
+  useEffect(() => {
+    setVault(localStorage.getItem(VAULT_STORAGE_KEY) ?? "");
+  }, []);
+
+  function handleVaultChange(value: string) {
+    setVault(value);
+    localStorage.setItem(VAULT_STORAGE_KEY, value);
+  }
+
   function handleExport() {
     const blob = new Blob([toObsidianMarkdown(note)], {
       type: "text/markdown;charset=utf-8",
@@ -287,6 +305,18 @@ function StudyNoteView({ note }: { note: StudyNote }) {
     URL.revokeObjectURL(url);
   }
 
+  async function handleOpenInObsidian() {
+    // Copy the markdown first so the user can paste if the obsidian:// handler
+    // isn't registered (no desktop Obsidian) and nothing visibly happens.
+    try {
+      await navigator.clipboard.writeText(toObsidianMarkdown(note));
+      setHint("Opening Obsidian… (note also copied to your clipboard)");
+    } catch {
+      setHint("Opening Obsidian…");
+    }
+    window.location.href = obsidianNewUri(note, vault);
+  }
+
   return (
     <article className="flex flex-col gap-5 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
       <div className="flex items-start justify-between gap-4">
@@ -296,13 +326,35 @@ function StudyNoteView({ note }: { note: StudyNote }) {
           </span>
           <h2 className="text-2xl font-semibold">{note.title}</h2>
         </div>
-        <button
-          type="button"
-          onClick={handleExport}
-          className="shrink-0 self-start rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
-        >
-          Export to Obsidian
-        </button>
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleOpenInObsidian}
+              className="rounded-full bg-violet-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-violet-500"
+            >
+              Open in Obsidian
+            </button>
+            <button
+              type="button"
+              onClick={handleExport}
+              className="rounded-full border border-zinc-300 px-4 py-2 text-sm font-medium transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+            >
+              Download
+            </button>
+          </div>
+          <input
+            type="text"
+            value={vault}
+            onChange={(e) => handleVaultChange(e.target.value)}
+            placeholder="Obsidian vault (optional)"
+            aria-label="Obsidian vault name"
+            className="w-48 rounded-md border border-zinc-300 bg-white px-2 py-1 text-xs outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900"
+          />
+          {hint && (
+            <p className="max-w-48 text-right text-xs text-zinc-400">{hint}</p>
+          )}
+        </div>
       </div>
 
       <section className="flex flex-col gap-1">

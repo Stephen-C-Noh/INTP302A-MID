@@ -16,13 +16,34 @@ function sanitizeLinkTarget(text: string): string {
   return text.replace(/[[\]|#^]/g, " ").replace(/\s+/g, " ").trim();
 }
 
-// Filenames Obsidian/OSes reject; collapse to a safe slug, keep it readable.
-export function obsidianFileName(title: string): string {
+// A safe, readable note name with reserved chars stripped (no extension —
+// used both for the download filename and the obsidian:// `file` param).
+export function obsidianNoteName(title: string): string {
   const base = title
     .replace(/[\\/:*?"<>|#^[\]]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-  return `${base || "Study Note"}.md`;
+  return base || "Study Note";
+}
+
+// Filenames Obsidian/OSes reject; collapse to a safe slug, keep it readable.
+export function obsidianFileName(title: string): string {
+  return `${obsidianNoteName(title)}.md`;
+}
+
+// `obsidian://new` URI that creates the note directly in the user's vault.
+// Built with encodeURIComponent (not URLSearchParams, which encodes spaces as
+// "+" and breaks Obsidian's decodeURIComponent parsing). A blank vault omits
+// the param, so Obsidian falls back to the last-open vault.
+export function obsidianNewUri(note: StudyNote, vault?: string): string {
+  const parts = [
+    `file=${encodeURIComponent(obsidianNoteName(note.title))}`,
+    `content=${encodeURIComponent(toObsidianMarkdown(note))}`,
+  ];
+  if (vault?.trim()) {
+    parts.unshift(`vault=${encodeURIComponent(vault.trim())}`);
+  }
+  return `obsidian://new?${parts.join("&")}`;
 }
 
 export function toObsidianMarkdown(note: StudyNote, created = isoDate()): string {
