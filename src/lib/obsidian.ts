@@ -35,10 +35,16 @@ export function obsidianFileName(title: string): string {
 // Built with encodeURIComponent (not URLSearchParams, which encodes spaces as
 // "+" and breaks Obsidian's decodeURIComponent parsing). A blank vault omits
 // the param, so Obsidian falls back to the last-open vault.
+//
+// `overwrite=true` makes re-import idempotent: opening the same note twice
+// overwrites the same-titled file instead of piling up "Title 1.md" copies.
+// We can't detect existing notes ourselves — the vault is export-only (ADR
+// 0001), so Azure SQL is the source of truth and the vault is disposable.
 export function obsidianNewUri(note: StudyNote, vault?: string): string {
   const parts = [
     `file=${encodeURIComponent(obsidianNoteName(note.title))}`,
     `content=${encodeURIComponent(toObsidianMarkdown(note))}`,
+    `overwrite=true`,
   ];
   if (vault?.trim()) {
     parts.unshift(`vault=${encodeURIComponent(vault.trim())}`);
