@@ -106,3 +106,13 @@ export async function getStudyNote(id: string): Promise<SavedStudyNote | null> {
     createdAt: new Date(row.createdAt).toISOString(),
   };
 }
+
+// Returns true if a row was deleted, false if no note matched the id.
+export async function deleteStudyNote(id: string): Promise<boolean> {
+  const pool = await getPool();
+  const result = await pool
+    .request()
+    .input("id", sql.UniqueIdentifier, id)
+    .query(`DELETE FROM StudyNotes WHERE id = @id;`);
+  return result.rowsAffected[0] > 0;
+}

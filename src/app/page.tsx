@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   MAX_MATERIAL_CHARS,
+  type SavedStudyNote,
   type StudyNote,
   type StudyNoteSummary,
 } from "@/lib/studyNote";
@@ -13,7 +14,7 @@ const ACCEPTED_FILE_TYPES = ".md,.markdown,.txt,text/markdown,text/plain";
 export default function Home() {
   const [material, setMaterial] = useState("");
   const [course, setCourse] = useState("");
-  const [note, setNote] = useState<StudyNote | null>(null);
+  const [note, setNote] = useState<SavedStudyNote | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<StudyNoteSummary[]>([]);
@@ -43,10 +44,27 @@ export default function Home() {
       const res = await fetch(`/api/notes/${id}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to load the note.");
-      setNote(data as StudyNote);
+      setNote(data as SavedStudyNote);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load the note.");
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!window.confirm("Delete this Study Note? This can't be undone.")) return;
+    setError(null);
+    try {
+      const res = await fetch(`/api/notes/${id}`, { method: "DELETE" });
+      if (!res.ok && res.status !== 404) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? "Failed to delete the note.");
+      }
+      // Clear the detail view if the open note is the one we just deleted.
+      setNote((current) => (current?.id === id ? null : current));
+      await loadHistory();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete the note.");
     }
   }
 
@@ -87,7 +105,7 @@ export default function Home() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Generation failed.");
-      setNote(data as StudyNote);
+      setNote(data as SavedStudyNote);
       loadHistory();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Generation failed.");
@@ -183,7 +201,11 @@ export default function Home() {
         {note && <StudyNoteView note={note} />}
 
         {history.length > 0 && (
-          <HistoryView history={history} onSelect={handleSelect} />
+          <HistoryView
+            history={history}
+            onSelect={handleSelect}
+            onDelete={handleDelete}
+          />
         )}
       </main>
     </div>
@@ -193,9 +215,11 @@ export default function Home() {
 function HistoryView({
   history,
   onSelect,
+  onDelete,
 }: {
   history: StudyNoteSummary[];
   onSelect: (id: string) => void;
+  onDelete: (id: string) => void;
 }) {
   // Group by course, preserving the (newest-first) order entries arrive in.
   const byCourse = new Map<string, StudyNoteSummary[]>();
@@ -216,16 +240,28 @@ function HistoryView({
           <h3 className="text-sm font-semibold">{course}</h3>
           <ul className="flex flex-col gap-1">
             {items.map((item) => (
-              <li key={item.id}>
+              <li
+                key={item.id}
+                className="group flex items-center gap-1 rounded-md transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800"
+              >
                 <button
                   type="button"
                   onClick={() => onSelect(item.id)}
-                  className="flex w-full items-baseline justify-between gap-3 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  className="flex min-w-0 flex-1 items-baseline justify-between gap-3 px-2 py-1.5 text-left text-sm"
                 >
                   <span className="truncate">{item.title}</span>
                   <span className="shrink-0 text-xs text-zinc-400">
                     {new Date(item.createdAt).toLocaleDateString()}
                   </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDelete(item.id)}
+                  aria-label={`Delete "${item.title}"`}
+                  title="Delete"
+                  className="shrink-0 rounded-md px-2 py-1.5 text-xs text-zinc-400 transition-colors hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-950 dark:hover:text-red-400"
+                >
+                  Delete
                 </button>
               </li>
             ))}
