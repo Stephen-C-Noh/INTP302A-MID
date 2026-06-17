@@ -1,26 +1,106 @@
 @import "tailwindcss";
 
+/* ---------------------------------------------------------------------------
+   Design tokens. Light + dark, mapped into Tailwind so utilities like
+   `bg-surface`, `text-muted`, `border-border`, `text-accent` just work.
+--------------------------------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --bg: #faf9fe;
+  --surface: #ffffff;
+  --surface-2: #f5f3fb;
+  --border: #e8e4f4;
+  --fg: #1a1825;
+  --muted: #6c6982;
+  --accent: #7c5cff;
+  --accent-strong: #6840ff;
+  --accent-soft: #efeaff;
+  --danger: #e5484d;
+  --ring: color-mix(in oklab, var(--accent) 45%, transparent);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: #0a0910;
+    --surface: #14121f;
+    --surface-2: #1b1830;
+    --border: #2a2640;
+    --fg: #ece9f5;
+    --muted: #9b97ae;
+    --accent: #9c83ff;
+    --accent-strong: #8a6bff;
+    --accent-soft: #1d1838;
+    --danger: #ff6369;
+    --ring: color-mix(in oklab, var(--accent) 50%, transparent);
   }
 }
 
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--accent) 28%, transparent);
+}
+
+/* Custom scrollbar that matches the violet theme. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--accent) 40%, transparent) transparent;
+}
+
+/* ---------------------------------------------------------------------------
+   Decorative aurora — a soft violet glow painted behind the whole app.
+--------------------------------------------------------------------------- */
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      60rem 32rem at 50% -8rem,
+      color-mix(in oklab, var(--accent) 22%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      40rem 28rem at 110% 10%,
+      color-mix(in oklab, var(--accent) 12%, transparent),
+      transparent 65%
+    );
+}
+
+/* Gradient text helper for the brand wordmark. */
+.text-gradient {
+  background-image: linear-gradient(
+    100deg,
+    var(--accent-strong),
+    color-mix(in oklab, var(--accent) 70%, #ff8bd0)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
