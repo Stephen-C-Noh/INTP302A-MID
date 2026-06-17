@@ -8,7 +8,7 @@ Azure (already provisioned): RG `INTP-MidTerm-Project`, account `Study-With-Obsi
 
 | Window | Task | Done when |
 |---|---|---|
-| **H0–1** | ✅ Azure OpenAI / Foundry provisioned + `gpt-4.1-mini` deployment verified. Provision Azure SQL (serverless free) + create `StudyNotes` table. Create App Service plan (F1/B1). | OpenAI reachable, SQL table exists, App Service ready |
+| **H0–1** | ✅ Azure OpenAI / Foundry provisioned + `gpt-4.1-mini` deployment verified. Provision Azure SQL (Basic DTU) + create `StudyNotes` table. Create App Service plan (F1/B1). | OpenAI reachable, SQL table exists, App Service ready |
 | **H1–2** | `create-next-app`, minimal UI (textarea + optional Course field + submit + result area), git repo, **deploy empty app to App Service** to prove the pipeline. | Public URL shows the app |
 | **H2–4** | `/api/generate` route → Azure OpenAI call (JSON/structured output, one retry), prompt enforcing **always-English** output and the fixed contract (title, course, summary paragraph, keyConcepts term+def, 2–3 answerless questions). | Real Study Note JSON in UI from localhost |
 | **H4–6** | Azure SQL: connect, save Study Note (+ sourceMaterial) on generate; history list grouped by Course; **delete** endpoint + button. | Records persist, list loads, delete works |
@@ -35,10 +35,10 @@ AZURE_SQL_CONNECTION_STRING=
 - History = view + delete; editing deferred (future: edit in Obsidian + re-import/vault sync).
 
 ## Deliverables checklist
-- [ ] Proposal (proposal.md → PDF/Word for D2L)
-- [ ] Live Azure URL
-- [ ] Public GitHub repo, meaningful commits, no secrets
-- [ ] README + Responsible AI review
+- [x] Proposal (`proposal.md`) — convert to PDF/Word for D2L submission
+- [x] Live Azure URL — https://studywithobsidian-cfavd0bsfdhnhjb4.canadacentral-01.azurewebsites.net
+- [x] Public GitHub repo, meaningful commits, no secrets
+- [x] README + Responsible AI review
 - [ ] 3–5 min demo video (deployment + storage + AI feature, 2+ inputs)
 - [ ] Individual reflection (100–200 words)
-- [ ] Resources cleaned up
+- [ ] Resources cleaned up (after grading)

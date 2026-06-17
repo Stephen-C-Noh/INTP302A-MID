@@ -32,7 +32,7 @@ See `CONTEXT.md`. In short:
 
 ## Azure Services
 - **Hosting:** Azure App Service (Next.js, frontend + API routes in one codebase).
-- **Storage:** Azure SQL Database (serverless / free tier) — Study Note records.
+- **Storage:** Azure SQL Database (Basic DTU tier) — Study Note records.
 - **AI:** Azure OpenAI / Microsoft Foundry, model `gpt-4.1-mini`. Resource group `INTP-MidTerm-Project`, account `Study-With-Obsidian`, project `StudyApp-With-Obsidian`, region `eastus`.
 - **Secrets:** `.env.local` locally, App Service Application Settings in production.
 
