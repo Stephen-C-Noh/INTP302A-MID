@@ -9,6 +9,7 @@ import {
 } from "@/lib/studyNote";
 import {
   obsidianFileName,
+  obsidianHubUri,
   obsidianNewUri,
   toObsidianMarkdown,
 } from "@/lib/obsidian";
@@ -313,6 +314,14 @@ function StudyNoteView({ note }: { note: StudyNote }) {
       setHint("Opening Obsidian… (note also copied to your clipboard)");
     } catch {
       setHint("Opening Obsidian…");
+    }
+    // Ensure the course hub note exists first (silently) so this note clusters
+    // around it in the graph, then open the note itself. Two obsidian:// calls
+    // need a beat between them so the OS handler fires both.
+    const course = note.course?.trim();
+    if (course) {
+      window.location.href = obsidianHubUri(course, vault);
+      await new Promise((resolve) => setTimeout(resolve, 400));
     }
     window.location.href = obsidianNewUri(note, vault);
   }
