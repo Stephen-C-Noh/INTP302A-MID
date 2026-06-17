@@ -40,5 +40,5 @@ AZURE_SQL_CONNECTION_STRING=
 - [x] Public GitHub repo, meaningful commits, no secrets
 - [x] README + Responsible AI review
 - [ ] 3–5 min demo video (deployment + storage + AI feature, 2+ inputs)
-- [ ] Individual reflection (100–200 words)
+- [x] Individual reflection (100–200 words) — `REFLECTION.md`
 - [ ] Resources cleaned up (after grading)
