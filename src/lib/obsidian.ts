@@ -16,6 +16,13 @@ function sanitizeLinkTarget(text: string): string {
   return text.replace(/[[\]|#^]/g, " ").replace(/\s+/g, " ").trim();
 }
 
+// The `[[wikilink]]` target / hub-note basename for a course. The frontmatter
+// link and the course hub note must use the *same* string, or the link won't
+// resolve to the hub — so both go through here.
+export function obsidianCourseTarget(course: string): string {
+  return sanitizeLinkTarget(course);
+}
+
 // A safe, readable note name with reserved chars stripped (no extension —
 // used both for the download filename and the obsidian:// `file` param).
 export function obsidianNoteName(title: string): string {
@@ -52,9 +59,27 @@ export function obsidianNewUri(note: StudyNote, vault?: string): string {
   return `obsidian://new?${parts.join("&")}`;
 }
 
+// `obsidian://new` URI that ensures the course hub note exists, so study notes
+// cluster around it in the graph (Obsidian's default `hideUnresolved` hides
+// hubs that aren't real files). `append=true` creates the hub if missing and
+// leaves an existing one untouched — we pass no content, so nothing is added
+// to a hub that already exists. `silent=true` keeps focus on the study note we
+// open right after. The file basename matches the frontmatter `[[course]]`.
+export function obsidianHubUri(course: string, vault?: string): string {
+  const parts = [
+    `file=${encodeURIComponent(obsidianCourseTarget(course))}`,
+    `append=true`,
+    `silent=true`,
+  ];
+  if (vault?.trim()) {
+    parts.unshift(`vault=${encodeURIComponent(vault.trim())}`);
+  }
+  return `obsidian://new?${parts.join("&")}`;
+}
+
 export function toObsidianMarkdown(note: StudyNote, created = isoDate()): string {
   const title = note.title.trim();
-  const course = sanitizeLinkTarget(note.course);
+  const course = obsidianCourseTarget(note.course);
 
   const frontmatter = [
     "---",

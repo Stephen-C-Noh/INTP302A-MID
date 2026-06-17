@@ -26,7 +26,7 @@ The output is **always in English**, regardless of the input language. Each Stud
 | AI generation | Azure OpenAI `gpt-4.1-mini`, structured (strict JSON) output, always English |
 | Persist + history | Saved to Azure SQL; history grouped by Course; open or delete any note |
 | Export to Obsidian | Download a formatted `.md` (frontmatter, `[[wikilinks]]`, `> [!question]` callout, `ai-generated` tag) |
-| Open in Obsidian | One click opens `obsidian://new` so the note is created directly in your vault (requires Obsidian desktop — see Prerequisites) |
+| Open in Obsidian | One click opens `obsidian://new` so the note is created directly in your vault. Also creates the note's **course hub** note if it's missing, so notes cluster by Course in the graph (requires Obsidian desktop — see Prerequisites) |
 
 ---
 
